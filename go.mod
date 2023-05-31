@@ -1,4 +1,4 @@
-module github.com/T-Systems-MMS/tnd
+module github.com/telekom-mms/tnd
 
 go 1.18
 

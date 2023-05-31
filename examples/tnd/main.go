@@ -4,8 +4,8 @@ import (
 	"flag"
 	"strings"
 
-	"github.com/T-Systems-MMS/tnd/pkg/trustnet"
 	log "github.com/sirupsen/logrus"
+	"github.com/telekom-mms/tnd/pkg/trustnet"
 )
 
 var (

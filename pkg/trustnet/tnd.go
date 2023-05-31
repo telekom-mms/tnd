@@ -3,8 +3,8 @@ package trustnet
 import (
 	"net"
 
-	"github.com/T-Systems-MMS/tnd/internal/trusthttps"
 	log "github.com/sirupsen/logrus"
+	"github.com/telekom-mms/tnd/internal/trusthttps"
 )
 
 // TND realizes the trusted network detection

@@ -44,7 +44,7 @@ func main() {
 	parseCommandLine()
 
 	// create tnd
-	tnd := trustnet.NewTND()
+	tnd := trustnet.NewTND(trustnet.NewConfig())
 
 	// set trusted https servers
 	for url, hash := range httpsServers {

@@ -10,24 +10,9 @@ import (
 	"github.com/telekom-mms/tnd/internal/routes"
 )
 
-const (
-	// waitCheck is the wait time before http checks in seconds
-	waitCheck = 1
-
-	// httpsTimeout is the timeout for http requests in seconds
-	httpsTimeout = 5
-
-	// untrustedTimer is the timer for periodic checks in case of an
-	// untrusted network in seconds
-	untrustedTimer = 30
-
-	// trustedTimer is the timer for periodic checks in case of a
-	// trusted network in seconds
-	trustedTimer = 60
-)
-
 // TND realizes the trusted network detection
 type TND struct {
+	config  *Config
 	probes  chan struct{}
 	results chan bool
 	done    chan struct{}
@@ -74,9 +59,9 @@ func (t *TND) probe() {
 		// sleep a second between server probes to let network
 		// settle a bit in case of a burst of routing and dns
 		// changes, e.g, when connecting to a new network
-		time.Sleep(waitCheck * time.Second)
+		time.Sleep(t.config.WaitCheck)
 
-		if s.Check(t.dialer, httpsTimeout*time.Second) {
+		if s.Check(t.dialer, t.config.HTTPSTimeout) {
 			// TODO: be more strict and require all trusted servers
 			// to be reachable?
 			// TODO: probe servers in random order?
@@ -92,9 +77,9 @@ func (t *TND) probe() {
 // resetTimer resets the periodic probe timer
 func (t *TND) resetTimer() {
 	if t.trusted {
-		t.timer.Reset(trustedTimer * time.Second)
+		t.timer.Reset(t.config.TrustedTimer)
 	} else {
-		t.timer.Reset(untrustedTimer * time.Second)
+		t.timer.Reset(t.config.UntrustedTimer)
 	}
 }
 
@@ -114,7 +99,7 @@ func (t *TND) start() {
 	defer fw.Stop()
 
 	// set timer for periodic checks
-	t.timer = time.NewTimer(untrustedTimer * time.Second)
+	t.timer = time.NewTimer(t.config.UntrustedTimer)
 
 	// main loop
 	for {
@@ -199,8 +184,9 @@ func (t *TND) Results() chan bool {
 }
 
 // NewTND returns a new TND
-func NewTND() *TND {
+func NewTND(config *Config) *TND {
 	return &TND{
+		config:  config,
 		probes:  make(chan struct{}),
 		results: make(chan bool),
 		done:    make(chan struct{}),

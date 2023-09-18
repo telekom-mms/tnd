@@ -1,4 +1,4 @@
-package trusthttps
+package files
 
 import "testing"
 

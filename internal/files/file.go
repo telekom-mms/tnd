@@ -1,4 +1,4 @@
-package trusthttps
+package files
 
 import (
 	"github.com/fsnotify/fsnotify"

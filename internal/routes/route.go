@@ -1,4 +1,4 @@
-package trusthttps
+package routes
 
 import (
 	log "github.com/sirupsen/logrus"

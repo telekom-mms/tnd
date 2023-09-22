@@ -185,6 +185,14 @@ func (t *TND) Stop() {
 	}
 }
 
+// Probe triggers a trusted network probe
+func (t *TND) Probe() {
+	select {
+	case t.probes <- struct{}{}:
+	case <-t.done:
+	}
+}
+
 // Results returns the results channel
 func (t *TND) Results() chan bool {
 	return t.results

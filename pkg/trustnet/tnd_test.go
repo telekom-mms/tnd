@@ -49,6 +49,19 @@ func TestTNDStartStop(t *testing.T) {
 	tnd.Stop()
 }
 
+// TestTNDProbe tests Probe of TND
+func TestTNDProbe(t *testing.T) {
+	tnd := NewTND()
+	tnd.Start()
+	tnd.Probe()
+	want := false
+	got := <-tnd.Results()
+	if got != want {
+		t.Errorf("got %t, want %t", got, want)
+	}
+	tnd.Stop()
+}
+
 // TestTNDResults tests Results of TND
 func TestTNDResults(t *testing.T) {
 	tnd := NewTND()

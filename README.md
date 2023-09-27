@@ -21,7 +21,7 @@ import "github.com/T-Systems-MMS/tnd/pkg/trustnet"
 
 func main() {
 	// create tnd
-	tnd := trustnet.NewTND()
+	tnd := trustnet.NewTND(trustnet.NewConfig())
 
 	// set trusted https server(s)
 	url := "https://trusted1.mynetwork.com:443"

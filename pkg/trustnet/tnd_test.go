@@ -9,7 +9,7 @@ import (
 
 // TestTNDAddServer tests AddServer of TND
 func TestTNDAddServer(t *testing.T) {
-	tnd := NewTND()
+	tnd := NewTND(NewConfig())
 	url := "http://test.example.com:442"
 	cert := []byte("raw test certificate")
 	hash := sha256.Sum256(cert)
@@ -31,7 +31,7 @@ func TestTNDAddServer(t *testing.T) {
 
 // TestTNDSetDialer tests SetDialer of TND
 func TestTNDSetDialer(t *testing.T) {
-	tnd := NewTND()
+	tnd := NewTND(NewConfig())
 	dialer := &net.Dialer{}
 	tnd.SetDialer(dialer)
 
@@ -44,14 +44,14 @@ func TestTNDSetDialer(t *testing.T) {
 
 // TestTNDStartStop tests Start and Stop of TND
 func TestTNDStartStop(t *testing.T) {
-	tnd := NewTND()
+	tnd := NewTND(NewConfig())
 	tnd.Start()
 	tnd.Stop()
 }
 
 // TestTNDProbe tests Probe of TND
 func TestTNDProbe(t *testing.T) {
-	tnd := NewTND()
+	tnd := NewTND(NewConfig())
 	tnd.Start()
 	tnd.Probe()
 	want := false
@@ -64,7 +64,7 @@ func TestTNDProbe(t *testing.T) {
 
 // TestTNDResults tests Results of TND
 func TestTNDResults(t *testing.T) {
-	tnd := NewTND()
+	tnd := NewTND(NewConfig())
 	want := tnd.results
 	got := tnd.Results()
 	if want != got {
@@ -74,7 +74,7 @@ func TestTNDResults(t *testing.T) {
 
 // TestNewTND tests NewTND
 func TestNewTND(t *testing.T) {
-	tnd := NewTND()
+	tnd := NewTND(NewConfig())
 	if tnd.probes == nil {
 		t.Errorf("got nil, want != nil")
 	}

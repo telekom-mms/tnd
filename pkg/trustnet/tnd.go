@@ -10,8 +10,18 @@ import (
 	"github.com/telekom-mms/tnd/internal/routes"
 )
 
-// TND realizes the trusted network detection
-type TND struct {
+// TND is the trusted network detection
+type TND interface {
+	AddServer(url, hash string)
+	SetDialer(dialer *net.Dialer)
+	Start()
+	Stop()
+	Probe()
+	Results() chan bool
+}
+
+// Detector realizes the trusted network detection
+type Detector struct {
 	config  *Config
 	probes  chan struct{}
 	results chan bool
@@ -34,123 +44,123 @@ type TND struct {
 
 // AddServer adds the https server url and its expected hash to the list of
 // trusted servers; note: all servers must be added before Start()
-func (t *TND) AddServer(url, hash string) {
+func (d *Detector) AddServer(url, hash string) {
 	server := https.NewServer(url, hash)
-	t.servers = append(t.servers, server)
+	d.servers = append(d.servers, server)
 }
 
 // SetDialer sets a custom dialer for the https connections; note: the dialer
 // must be set before Start()
-func (t *TND) SetDialer(dialer *net.Dialer) {
-	t.dialer = dialer
+func (d *Detector) SetDialer(dialer *net.Dialer) {
+	d.dialer = dialer
 }
 
 // sendResult sends result over channel c
-func (t *TND) sendResult(c chan bool, result bool) {
+func (d *Detector) sendResult(c chan bool, result bool) {
 	select {
 	case c <- result:
-	case <-t.done:
+	case <-d.done:
 	}
 }
 
 // probe checks the servers and sends the result back over probeResults
-func (t *TND) probe() {
-	for _, s := range t.servers {
+func (d *Detector) probe() {
+	for _, s := range d.servers {
 		// sleep a second between server probes to let network
 		// settle a bit in case of a burst of routing and dns
 		// changes, e.g, when connecting to a new network
-		time.Sleep(t.config.WaitCheck)
+		time.Sleep(d.config.WaitCheck)
 
-		if s.Check(t.dialer, t.config.HTTPSTimeout) {
+		if s.Check(d.dialer, d.config.HTTPSTimeout) {
 			// TODO: be more strict and require all trusted servers
 			// to be reachable?
 			// TODO: probe servers in random order?
 			log.WithField("url", s.URL).Debug("TND https server trusted")
-			t.sendResult(t.probeResults, true)
+			d.sendResult(d.probeResults, true)
 			return
 		}
 		log.WithField("url", s.URL).Debug("TND https server not trusted")
 	}
-	t.sendResult(t.probeResults, false)
+	d.sendResult(d.probeResults, false)
 }
 
 // resetTimer resets the periodic probe timer
-func (t *TND) resetTimer() {
-	if t.trusted {
-		t.timer.Reset(t.config.TrustedTimer)
+func (d *Detector) resetTimer() {
+	if d.trusted {
+		d.timer.Reset(d.config.TrustedTimer)
 	} else {
-		t.timer.Reset(t.config.UntrustedTimer)
+		d.timer.Reset(d.config.UntrustedTimer)
 	}
 }
 
 // start starts the trusted network detection
-func (t *TND) start() {
+func (d *Detector) start() {
 	// signal stop to user via results
-	defer close(t.results)
+	defer close(d.results)
 
 	// start route watching
-	rw := routes.NewRoutesWatch(t.probes)
+	rw := routes.NewRoutesWatch(d.probes)
 	rw.Start()
 	defer rw.Stop()
 
 	// start file watching
-	fw := files.NewFilesWatch(t.probes)
+	fw := files.NewFilesWatch(d.probes)
 	fw.Start()
 	defer fw.Stop()
 
 	// set timer for periodic checks
-	t.timer = time.NewTimer(t.config.UntrustedTimer)
+	d.timer = time.NewTimer(d.config.UntrustedTimer)
 
 	// main loop
 	for {
 		select {
-		case <-t.probes:
-			if t.running {
-				t.runAgain = true
+		case <-d.probes:
+			if d.running {
+				d.runAgain = true
 				break
 			}
-			t.running = true
-			go t.probe()
+			d.running = true
+			go d.probe()
 
-		case r := <-t.probeResults:
+		case r := <-d.probeResults:
 			// handle probe result
-			t.running = false
-			if t.runAgain {
+			d.running = false
+			if d.runAgain {
 				// we must trigger another probe
-				t.runAgain = false
-				t.running = true
-				go t.probe()
+				d.runAgain = false
+				d.running = true
+				go d.probe()
 			}
 			log.WithField("trusted", r).Debug("TND https result")
-			t.trusted = r
-			t.sendResult(t.results, r)
+			d.trusted = r
+			d.sendResult(d.results, r)
 
 			// reset periodic probing timer
-			if t.running {
+			if d.running {
 				// probing still active and new results about
 				// to arrive, so wait for them before resetting
 				// the timer
 				break
 			}
-			if !t.timer.Stop() {
-				<-t.timer.C
+			if !d.timer.Stop() {
+				<-d.timer.C
 			}
-			t.resetTimer()
+			d.resetTimer()
 
-		case <-t.timer.C:
-			if !t.running && !t.runAgain {
+		case <-d.timer.C:
+			if !d.running && !d.runAgain {
 				// no probes active, trigger new probe
 				log.Debug("TND periodic probe timer")
-				t.running = true
-				go t.probe()
+				d.running = true
+				go d.probe()
 			}
 
 			// reset timer
-			t.resetTimer()
+			d.resetTimer()
 
-		case <-t.done:
-			if !t.timer.Stop() {
-				<-t.timer.C
+		case <-d.done:
+			if !d.timer.Stop() {
+				<-d.timer.C
 			}
 			return
 		}
@@ -158,34 +168,34 @@ func (t *TND) start() {
 }
 
 // Start starts the trusted network detection
-func (t *TND) Start() {
-	go t.start()
+func (d *Detector) Start() {
+	go d.start()
 }
 
 // Stop stops the running TND
-func (t *TND) Stop() {
-	close(t.done)
-	for range t.results {
+func (d *Detector) Stop() {
+	close(d.done)
+	for range d.results {
 		// wait for exit
 	}
 }
 
 // Probe triggers a trusted network probe
-func (t *TND) Probe() {
+func (d *Detector) Probe() {
 	select {
-	case t.probes <- struct{}{}:
-	case <-t.done:
+	case d.probes <- struct{}{}:
+	case <-d.done:
 	}
 }
 
 // Results returns the results channel
-func (t *TND) Results() chan bool {
-	return t.results
+func (d *Detector) Results() chan bool {
+	return d.results
 }
 
-// NewTND returns a new TND
-func NewTND(config *Config) *TND {
-	return &TND{
+// NewDetector returns a new Detector
+func NewDetector(config *Config) *Detector {
+	return &Detector{
 		config:  config,
 		probes:  make(chan struct{}),
 		results: make(chan bool),

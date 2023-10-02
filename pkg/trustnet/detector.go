@@ -167,6 +167,7 @@ func (d *Detector) Stop() {
 	close(d.done)
 	for range d.results {
 		// wait for exit
+		log.Debug("TND dropping result during shutdown")
 	}
 }
 

@@ -43,7 +43,7 @@ func TestTNDSetDialer(t *testing.T) {
 }
 
 // TestTNDStartStop tests Start and Stop of TND
-func TestTNDStartStop(t *testing.T) {
+func TestTNDStartStop(_ *testing.T) {
 	tnd := NewDetector(NewConfig())
 	tnd.Start()
 	tnd.Stop()

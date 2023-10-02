@@ -1,3 +1,4 @@
+// Package trustnet contains components for trusted network detection.
 package trustnet
 
 import (

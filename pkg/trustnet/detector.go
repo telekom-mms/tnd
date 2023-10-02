@@ -10,7 +10,7 @@ import (
 	"github.com/telekom-mms/tnd/internal/routes"
 )
 
-// Detector realizes the trusted network detection
+// Detector realizes the trusted network detection.
 type Detector struct {
 	config  *Config
 	probes  chan struct{}
@@ -33,19 +33,19 @@ type Detector struct {
 }
 
 // AddServer adds the https server url and its expected hash to the list of
-// trusted servers; note: all servers must be added before Start()
+// trusted servers; note: all servers must be added before Start().
 func (d *Detector) AddServer(url, hash string) {
 	server := https.NewServer(url, hash)
 	d.servers = append(d.servers, server)
 }
 
 // SetDialer sets a custom dialer for the https connections; note: the dialer
-// must be set before Start()
+// must be set before Start().
 func (d *Detector) SetDialer(dialer *net.Dialer) {
 	d.dialer = dialer
 }
 
-// sendResult sends result over channel c
+// sendResult sends result over channel c.
 func (d *Detector) sendResult(c chan bool, result bool) {
 	select {
 	case c <- result:
@@ -53,12 +53,12 @@ func (d *Detector) sendResult(c chan bool, result bool) {
 	}
 }
 
-// probe checks the servers and sends the result back over probeResults
+// probe checks the servers and sends the result back over probeResults.
 func (d *Detector) probe() {
 	for _, s := range d.servers {
-		// sleep a second between server probes to let network
-		// settle a bit in case of a burst of routing and dns
-		// changes, e.g, when connecting to a new network
+		// sleep between server probes to let network settle a bit in
+		// case of a burst of routing and dns changes, e.g, when
+		// connecting to a new network
 		time.Sleep(d.config.WaitCheck)
 
 		if s.Check(d.dialer, d.config.HTTPSTimeout) {
@@ -74,7 +74,7 @@ func (d *Detector) probe() {
 	d.sendResult(d.probeResults, false)
 }
 
-// resetTimer resets the periodic probe timer
+// resetTimer resets the periodic probe timer.
 func (d *Detector) resetTimer() {
 	if d.trusted {
 		d.timer.Reset(d.config.TrustedTimer)
@@ -83,7 +83,7 @@ func (d *Detector) resetTimer() {
 	}
 }
 
-// start starts the trusted network detection
+// start starts the trusted network detection.
 func (d *Detector) start() {
 	// signal stop to user via results
 	defer close(d.results)
@@ -157,12 +157,12 @@ func (d *Detector) start() {
 	}
 }
 
-// Start starts the trusted network detection
+// Start starts the trusted network detection.
 func (d *Detector) Start() {
 	go d.start()
 }
 
-// Stop stops the running TND
+// Stop stops the running TND.
 func (d *Detector) Stop() {
 	close(d.done)
 	for range d.results {
@@ -171,7 +171,7 @@ func (d *Detector) Stop() {
 	}
 }
 
-// Probe triggers a trusted network probe
+// Probe triggers a trusted network probe.
 func (d *Detector) Probe() {
 	select {
 	case d.probes <- struct{}{}:
@@ -179,12 +179,12 @@ func (d *Detector) Probe() {
 	}
 }
 
-// Results returns the results channel
+// Results returns the results channel.
 func (d *Detector) Results() chan bool {
 	return d.results
 }
 
-// NewDetector returns a new Detector
+// NewDetector returns a new Detector.
 func NewDetector(config *Config) *Detector {
 	return &Detector{
 		config:  config,

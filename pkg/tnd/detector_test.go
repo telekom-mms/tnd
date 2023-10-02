@@ -1,4 +1,4 @@
-package trustnet
+package tnd
 
 import (
 	"crypto/sha256"

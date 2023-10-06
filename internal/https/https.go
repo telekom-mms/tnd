@@ -14,13 +14,13 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// Server is a trusted https server and its certificate hash
+// Server is a trusted https server and its certificate hash.
 type Server struct {
 	URL  string
 	Hash string
 }
 
-// Check probes the https server and checks the certificate hash using dialer
+// Check probes the https server and checks the certificate hash using dialer.
 func (s *Server) Check(dialer *net.Dialer, timeout time.Duration) bool {
 	// connect to server
 	tr := &http.Transport{
@@ -70,7 +70,7 @@ func (s *Server) Check(dialer *net.Dialer, timeout time.Duration) bool {
 	return true
 }
 
-// NewServer returns a new Server with url and hash
+// NewServer returns a new Server with url and hash.
 func NewServer(url, hash string) *Server {
 	return &Server{
 		URL:  url,

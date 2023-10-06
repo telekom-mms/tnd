@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// TestServerCheck tests Check of Server
+// TestServerCheck tests Check of Server.
 func TestServerCheck(t *testing.T) {
 	// start test https server
 	ts := httptest.NewTLSServer(http.HandlerFunc(
@@ -51,7 +51,7 @@ func TestServerCheck(t *testing.T) {
 	}
 }
 
-// TestNewServer tests NewServer
+// TestNewServer tests NewServer.
 func TestNewServer(t *testing.T) {
 	url := "test.example.com"
 	hash := "test-hash"

@@ -1,3 +1,4 @@
+// Package files contains components for file watching.
 package files
 
 import (
@@ -14,19 +15,18 @@ const (
 	stubResolvConf    = systemdResolveDir + "/stub-resolv.conf"
 )
 
-// FilesWatch watches resolv.conf files and then probes the trusted https
-// servers
-type FilesWatch struct {
+// Watch watches resolv.conf files and then probes the trusted https servers.
+type Watch struct {
 	probes chan struct{}
 	done   chan struct{}
 	closed chan struct{}
 }
 
 // sendProbe sends a probe request over the probe channel
-func (f *FilesWatch) sendProbe() {
+func (w *Watch) sendProbe() {
 	select {
-	case f.probes <- struct{}{}:
-	case <-f.done:
+	case w.probes <- struct{}{}:
+	case <-w.done:
 	}
 }
 
@@ -43,9 +43,9 @@ func isResolvConfEvent(event fsnotify.Event) bool {
 	return false
 }
 
-// start starts the FilesWatch
-func (f *FilesWatch) start() {
-	defer close(f.closed)
+// start starts the Watch.
+func (w *Watch) start() {
+	defer close(w.closed)
 
 	// create watcher
 	watcher, err := fsnotify.NewWatcher()
@@ -67,7 +67,7 @@ func (f *FilesWatch) start() {
 	}
 
 	// run initial probe
-	f.sendProbe()
+	w.sendProbe()
 
 	// watch the files
 	for {
@@ -81,33 +81,33 @@ func (f *FilesWatch) start() {
 					"name": event.Name,
 					"op":   event.Op,
 				}).Debug("TND got resolv.conf file event")
-				f.sendProbe()
+				w.sendProbe()
 			}
 		case err, ok := <-watcher.Errors:
 			if !ok {
 				return
 			}
 			log.WithError(err).Error("TND got error file event")
-		case <-f.done:
+		case <-w.done:
 			return
 		}
 	}
 }
 
-// Start starts the FilesWatch
-func (f *FilesWatch) Start() {
-	go f.start()
+// Start starts the Watch.
+func (w *Watch) Start() {
+	go w.start()
 }
 
-// Stop stopps the FilesWatch
-func (f *FilesWatch) Stop() {
-	close(f.done)
-	<-f.closed
+// Stop stopps the Watch.
+func (w *Watch) Stop() {
+	close(w.done)
+	<-w.closed
 }
 
-// NewFilesWatch returns a new FilesWatch
-func NewFilesWatch(probes chan struct{}) *FilesWatch {
-	return &FilesWatch{
+// NewWatch returns a new Watch.
+func NewWatch(probes chan struct{}) *Watch {
+	return &Watch{
 		probes: probes,
 		done:   make(chan struct{}),
 		closed: make(chan struct{}),

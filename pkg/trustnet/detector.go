@@ -94,7 +94,7 @@ func (d *Detector) start() {
 	defer rw.Stop()
 
 	// start file watching
-	fw := files.NewFilesWatch(d.probes)
+	fw := files.NewWatch(d.probes)
 	fw.Start()
 	defer fw.Stop()
 

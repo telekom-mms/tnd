@@ -1,3 +1,4 @@
+// Package routes contains components for route watching.
 package routes
 
 import (
@@ -6,31 +7,31 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// RoutesWatch waits for routing update events and then probes the
+// Watch waits for routing update events and then probes the
 // trusted https servers
-type RoutesWatch struct {
+type Watch struct {
 	probes chan struct{}
 	done   chan struct{}
 }
 
 // sendProbe sends a probe request over the probe channel
-func (r *RoutesWatch) sendProbe() {
+func (w *Watch) sendProbe() {
 	select {
-	case r.probes <- struct{}{}:
-	case <-r.done:
+	case w.probes <- struct{}{}:
+	case <-w.done:
 	}
 }
 
-// start starts the RoutesWatch
-func (r *RoutesWatch) start() {
+// start starts the Watch
+func (w *Watch) start() {
 	// register for route update events
 	events := make(chan netlink.RouteUpdate)
-	if err := netlink.RouteSubscribe(events, r.done); err != nil {
+	if err := netlink.RouteSubscribe(events, w.done); err != nil {
 		log.WithError(err).Fatal("TND route subscribe error")
 	}
 
 	// run initial probe
-	r.sendProbe()
+	w.sendProbe()
 
 	// handle route update events
 	for e := range events {
@@ -40,32 +41,32 @@ func (r *RoutesWatch) start() {
 		case unix.RTM_DELROUTE:
 			log.WithField("dst", e.Dst).Debug("TND got route DEL event")
 		}
-		r.sendProbe()
+		w.sendProbe()
 	}
 }
 
-// Start starts the RoutesWatch
-func (r *RoutesWatch) Start() {
-	go r.start()
+// Start starts the Watch
+func (w *Watch) Start() {
+	go w.start()
 }
 
-// Stop stops the RoutesWatch
-func (r *RoutesWatch) Stop() {
-	// NOTE: this will not terminate the RoutesWatch goroutine until the
+// Stop stops the Watch
+func (w *Watch) Stop() {
+	// NOTE: this will not terminate the Watch goroutine until the
 	// next netlink event arrives due to a known issue of the netlink
 	// library we use. So, we cannot really wait for the goroutine
 	// termination here
-	close(r.done)
+	close(w.done)
 }
 
 // Probes returns the probe channel
-func (r *RoutesWatch) Probes() chan struct{} {
-	return r.probes
+func (w *Watch) Probes() chan struct{} {
+	return w.probes
 }
 
-// NewRoutesWatch returns a new RoutesWatch
-func NewRoutesWatch(probes chan struct{}) *RoutesWatch {
-	return &RoutesWatch{
+// NewWatch returns a new Watch
+func NewWatch(probes chan struct{}) *Watch {
+	return &Watch{
 		probes: probes,
 		done:   make(chan struct{}),
 	}

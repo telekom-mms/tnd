@@ -2,27 +2,27 @@ package routes
 
 import "testing"
 
-// TestRoutesWatchStartStop tests Start and Stop of RoutesWatch
-func TestRoutesWatchStartStop(t *testing.T) {
+// TestWatchStartStop tests Start and Stop of Watch
+func TestWatchStartStop(_ *testing.T) {
 	probes := make(chan struct{})
-	rw := NewRoutesWatch(probes)
+	rw := NewWatch(probes)
 	rw.Start()
 	rw.Stop()
 }
 
-// TestRoutesWatchProbes tests Probes of RoutesWatch
-func TestRoutesWatchProbes(t *testing.T) {
+// TestWatchProbes tests Probes of Watch
+func TestWatchProbes(t *testing.T) {
 	probes := make(chan struct{})
-	rw := NewRoutesWatch(probes)
+	rw := NewWatch(probes)
 	if rw.Probes() != probes {
 		t.Errorf("got %p, want %p", rw.Probes(), probes)
 	}
 }
 
-// TestNewRoutesWatch tests NewRoutesWatch
-func TestNewRoutesWatch(t *testing.T) {
+// TestNewWatch tests NewWatch
+func TestNewWatch(t *testing.T) {
 	probes := make(chan struct{})
-	rw := NewRoutesWatch(probes)
+	rw := NewWatch(probes)
 	if rw.probes != probes {
 		t.Errorf("got %p, want %p", rw.probes, probes)
 	}

@@ -89,7 +89,7 @@ func (d *Detector) start() {
 	defer close(d.results)
 
 	// start route watching
-	rw := routes.NewRoutesWatch(d.probes)
+	rw := routes.NewWatch(d.probes)
 	rw.Start()
 	defer rw.Stop()
 

@@ -2,7 +2,7 @@ package routes
 
 import "testing"
 
-// TestWatchStartStop tests Start and Stop of Watch
+// TestWatchStartStop tests Start and Stop of Watch.
 func TestWatchStartStop(_ *testing.T) {
 	probes := make(chan struct{})
 	rw := NewWatch(probes)
@@ -10,7 +10,7 @@ func TestWatchStartStop(_ *testing.T) {
 	rw.Stop()
 }
 
-// TestWatchProbes tests Probes of Watch
+// TestWatchProbes tests Probes of Watch.
 func TestWatchProbes(t *testing.T) {
 	probes := make(chan struct{})
 	rw := NewWatch(probes)
@@ -19,7 +19,7 @@ func TestWatchProbes(t *testing.T) {
 	}
 }
 
-// TestNewWatch tests NewWatch
+// TestNewWatch tests NewWatch.
 func TestNewWatch(t *testing.T) {
 	probes := make(chan struct{})
 	rw := NewWatch(probes)

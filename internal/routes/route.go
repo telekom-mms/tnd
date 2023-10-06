@@ -8,13 +8,13 @@ import (
 )
 
 // Watch waits for routing update events and then probes the
-// trusted https servers
+// trusted https servers.
 type Watch struct {
 	probes chan struct{}
 	done   chan struct{}
 }
 
-// sendProbe sends a probe request over the probe channel
+// sendProbe sends a probe request over the probe channel.
 func (w *Watch) sendProbe() {
 	select {
 	case w.probes <- struct{}{}:
@@ -22,7 +22,7 @@ func (w *Watch) sendProbe() {
 	}
 }
 
-// start starts the Watch
+// start starts the Watch.
 func (w *Watch) start() {
 	// register for route update events
 	events := make(chan netlink.RouteUpdate)
@@ -45,12 +45,12 @@ func (w *Watch) start() {
 	}
 }
 
-// Start starts the Watch
+// Start starts the Watch.
 func (w *Watch) Start() {
 	go w.start()
 }
 
-// Stop stops the Watch
+// Stop stops the Watch.
 func (w *Watch) Stop() {
 	// NOTE: this will not terminate the Watch goroutine until the
 	// next netlink event arrives due to a known issue of the netlink
@@ -59,12 +59,12 @@ func (w *Watch) Stop() {
 	close(w.done)
 }
 
-// Probes returns the probe channel
+// Probes returns the probe channel.
 func (w *Watch) Probes() chan struct{} {
 	return w.probes
 }
 
-// NewWatch returns a new Watch
+// NewWatch returns a new Watch.
 func NewWatch(probes chan struct{}) *Watch {
 	return &Watch{
 		probes: probes,

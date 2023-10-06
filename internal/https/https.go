@@ -1,3 +1,4 @@
+// Package https contains components for probing trusted HTTPS servers.
 package https
 
 import (

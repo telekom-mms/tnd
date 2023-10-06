@@ -6,7 +6,6 @@ import (
 	"crypto/tls"
 	"encoding/hex"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"strings"
@@ -42,7 +41,7 @@ func (s *Server) Check(dialer *net.Dialer, timeout time.Duration) bool {
 			log.WithError(err).Error("TND could not close http response body")
 		}
 	}()
-	if _, err := io.Copy(ioutil.Discard, r.Body); err != nil {
+	if _, err := io.Copy(io.Discard, r.Body); err != nil {
 		log.WithError(err).Error("TND could not read http response body")
 	}
 

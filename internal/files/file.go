@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	// resolv.conf files in /etc and /run/systemd/resolve
+	// resolv.conf files in /etc and /run/systemd/resolve.
 	etc               = "/etc"
 	etcResolvConf     = etc + "/resolv.conf"
 	systemdResolveDir = "/run/systemd/resolve"
@@ -22,7 +22,7 @@ type Watch struct {
 	closed chan struct{}
 }
 
-// sendProbe sends a probe request over the probe channel
+// sendProbe sends a probe request over the probe channel.
 func (w *Watch) sendProbe() {
 	select {
 	case w.probes <- struct{}{}:
@@ -30,7 +30,7 @@ func (w *Watch) sendProbe() {
 	}
 }
 
-// isResolvConfEvent checks if event is a resolv.conf file event
+// isResolvConfEvent checks if event is a resolv.conf file event.
 func isResolvConfEvent(event fsnotify.Event) bool {
 	switch event.Name {
 	case etcResolvConf:
@@ -99,7 +99,7 @@ func (w *Watch) Start() {
 	go w.start()
 }
 
-// Stop stopps the Watch.
+// Stop stops the Watch.
 func (w *Watch) Stop() {
 	close(w.done)
 	<-w.closed

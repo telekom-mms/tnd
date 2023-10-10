@@ -2,18 +2,18 @@ package files
 
 import "testing"
 
-// TestFilesWatchStartStop tests Start() and Stop() of FilesWatch
-func TestFilesWatchStartStop(t *testing.T) {
+// TestWatchStartStop tests Start() and Stop() of Watch.
+func TestWatchStartStop(_ *testing.T) {
 	probes := make(chan struct{})
-	fw := NewFilesWatch(probes)
+	fw := NewWatch(probes)
 	fw.Start()
 	fw.Stop()
 }
 
-// TestNewFilesWatch tests NewFilesWatch
-func TestNewFilesWatch(t *testing.T) {
+// TestNewWatch tests NewWatch.
+func TestNewWatch(t *testing.T) {
 	probes := make(chan struct{})
-	fw := NewFilesWatch(probes)
+	fw := NewWatch(probes)
 	if fw.probes != probes {
 		t.Errorf("got %p, want %p", fw.probes, probes)
 	}

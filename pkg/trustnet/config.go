@@ -3,22 +3,22 @@ package trustnet
 import "time"
 
 var (
-	// WaitCheck is the wait time before http checks
+	// WaitCheck is the wait time before http checks.
 	WaitCheck = 1 * time.Second
 
-	// HTTPSTimeout is the timeout for http requests
+	// HTTPSTimeout is the timeout for http requests.
 	HTTPSTimeout = 5 * time.Second
 
 	// UntrustedTimer is the timer for periodic checks in case of an
-	// untrusted network
+	// untrusted network.
 	UntrustedTimer = 30 * time.Second
 
 	// TrustedTimer is the timer for periodic checks in case of a
-	// trusted network
+	// trusted network.
 	TrustedTimer = 60 * time.Second
 )
 
-// Config is a TND configuration
+// Config is a TND configuration.
 type Config struct {
 	WaitCheck      time.Duration
 	HTTPSTimeout   time.Duration
@@ -26,7 +26,7 @@ type Config struct {
 	TrustedTimer   time.Duration
 }
 
-// Valid returns whether Config is valid
+// Valid returns whether Config is valid.
 func (c *Config) Valid() bool {
 	if c == nil ||
 		c.WaitCheck < 0 ||
@@ -39,7 +39,7 @@ func (c *Config) Valid() bool {
 	return true
 }
 
-// NewConfig returns a new Config
+// NewConfig returns a new Config.
 func NewConfig() *Config {
 	return &Config{
 		WaitCheck:      WaitCheck,

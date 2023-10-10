@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-// TestTNDAddServer tests AddServer of TND
+// TestTNDAddServer tests AddServer of TND.
 func TestTNDAddServer(t *testing.T) {
 	tnd := NewDetector(NewConfig())
 	url := "http://test.example.com:442"
@@ -29,7 +29,7 @@ func TestTNDAddServer(t *testing.T) {
 	}
 }
 
-// TestTNDSetDialer tests SetDialer of TND
+// TestTNDSetDialer tests SetDialer of TND.
 func TestTNDSetDialer(t *testing.T) {
 	tnd := NewDetector(NewConfig())
 	dialer := &net.Dialer{}
@@ -42,14 +42,14 @@ func TestTNDSetDialer(t *testing.T) {
 	}
 }
 
-// TestTNDStartStop tests Start and Stop of TND
-func TestTNDStartStop(t *testing.T) {
+// TestTNDStartStop tests Start and Stop of TND.
+func TestTNDStartStop(_ *testing.T) {
 	tnd := NewDetector(NewConfig())
 	tnd.Start()
 	tnd.Stop()
 }
 
-// TestTNDProbe tests Probe of TND
+// TestTNDProbe tests Probe of TND.
 func TestTNDProbe(t *testing.T) {
 	tnd := NewDetector(NewConfig())
 	tnd.Start()
@@ -62,7 +62,7 @@ func TestTNDProbe(t *testing.T) {
 	tnd.Stop()
 }
 
-// TestTNDResults tests Results of TND
+// TestTNDResults tests Results of TND.
 func TestTNDResults(t *testing.T) {
 	tnd := NewDetector(NewConfig())
 	want := tnd.results
@@ -72,7 +72,7 @@ func TestTNDResults(t *testing.T) {
 	}
 }
 
-// TestNewTND tests NewTND
+// TestNewTND tests NewTND.
 func TestNewTND(t *testing.T) {
 	tnd := NewDetector(NewConfig())
 	if tnd.probes == nil {

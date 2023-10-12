@@ -1,5 +1,5 @@
-// Package trustnet contains components for trusted network detection.
-package trustnet
+// Package tnd contains components for trusted network detection.
+package tnd
 
 import (
 	"net"

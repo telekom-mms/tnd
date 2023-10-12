@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/telekom-mms/tnd/pkg/trustnet"
+	"github.com/telekom-mms/tnd/pkg/tnd"
 )
 
 var (
@@ -44,16 +44,16 @@ func main() {
 	parseCommandLine()
 
 	// create tnd
-	tnd := trustnet.NewDetector(trustnet.NewConfig())
+	t := tnd.NewDetector(tnd.NewConfig())
 
 	// set trusted https servers
 	for url, hash := range httpsServers {
-		tnd.AddServer(url, hash)
+		t.AddServer(url, hash)
 	}
 
 	// start tnd
-	tnd.Start()
-	for r := range tnd.Results() {
+	t.Start()
+	for r := range t.Results() {
 		log.WithField("trusted", r).Info("TND result")
 	}
 }

@@ -17,20 +17,20 @@ You can use the Trusted Network Detection as shown in the following example:
 ```golang
 package main
 
-import "github.com/T-Systems-MMS/tnd/pkg/trustnet"
+import "github.com/telekom-mms/tnd/pkg/tnd"
 
 func main() {
 	// create tnd
-	tnd := trustnet.NewDetector(trustnet.NewConfig())
+	t := tnd.NewDetector(tnd.NewConfig())
 
 	// set trusted https server(s)
 	url := "https://trusted1.mynetwork.com:443"
 	hash := "ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789"
-	tnd.AddServer(url, hash)
+	t.AddServer(url, hash)
 
 	// start tnd
-	tnd.Start()
-	for r := range tnd.Results() {
+	t.Start()
+	for r := range t.Results() {
 		log.Println("Trusted Network:", r)
 	}
 }

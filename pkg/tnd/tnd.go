@@ -7,8 +7,10 @@ import (
 
 // TND is the trusted network detection.
 type TND interface {
-	AddServer(url, hash string)
+	SetServers(map[string]string)
+	GetServers() map[string]string
 	SetDialer(dialer *net.Dialer)
+	GetDialer() *net.Dialer
 	Start()
 	Stop()
 	Probe()

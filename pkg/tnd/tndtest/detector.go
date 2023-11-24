@@ -7,12 +7,14 @@ import (
 
 // Funcs are functions used by Detector for use in tests.
 type Funcs struct {
-	AddServer func(url, hash string)
-	SetDialer func(dialer *net.Dialer)
-	Start     func()
-	Stop      func()
-	Probe     func()
-	Results   func() chan bool
+	SetServers func(servers map[string]string)
+	GetServers func() map[string]string
+	SetDialer  func(dialer *net.Dialer)
+	GetDialer  func() *net.Dialer
+	Start      func()
+	Stop       func()
+	Probe      func()
+	Results    func() chan bool
 }
 
 // Detector is a simple Detector for use in tests.
@@ -20,12 +22,20 @@ type Detector struct {
 	Funcs Funcs
 }
 
-// AddServer adds the https server url and its expected hash to the list of
-// trusted servers.
-func (d *Detector) AddServer(url, hash string) {
-	if d.Funcs.AddServer != nil {
-		d.Funcs.AddServer(url, hash)
+// SetServers sets the https server urls and expected hashes as the list of
+// trusted servers. Map key is the server url, value is the hash.
+func (d *Detector) SetServers(servers map[string]string) {
+	if d.Funcs.SetServers != nil {
+		d.Funcs.SetServers(servers)
 	}
+}
+
+// GetServers returns the trusted server urls and hashes.
+func (d *Detector) GetServers() map[string]string {
+	if d.Funcs.GetServers != nil {
+		return d.Funcs.GetServers()
+	}
+	return nil
 }
 
 // SetDialer sets a custom dialer for the https connections.
@@ -33,6 +43,14 @@ func (d *Detector) SetDialer(dialer *net.Dialer) {
 	if d.Funcs.SetDialer != nil {
 		d.Funcs.SetDialer(dialer)
 	}
+}
+
+// GetDialer returns the custom dialer for the https connections.
+func (d *Detector) GetDialer() *net.Dialer {
+	if d.Funcs.GetDialer != nil {
+		return d.Funcs.GetDialer()
+	}
+	return nil
 }
 
 // Start starts the trusted network detection.

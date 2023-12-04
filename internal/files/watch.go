@@ -6,7 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const (
+var (
 	// resolv.conf files in /etc and /run/systemd/resolve.
 	etc               = "/etc"
 	etcResolvConf     = etc + "/resolv.conf"
@@ -15,11 +15,18 @@ const (
 	stubResolvConf    = systemdResolveDir + "/stub-resolv.conf"
 )
 
+// Watcher is the file watcher interface.
+type Watcher interface {
+	Start() error
+	Stop()
+}
+
 // Watch watches resolv.conf files and then probes the trusted https servers.
 type Watch struct {
-	probes chan struct{}
-	done   chan struct{}
-	closed chan struct{}
+	watcher *fsnotify.Watcher
+	probes  chan struct{}
+	done    chan struct{}
+	closed  chan struct{}
 }
 
 // sendProbe sends a probe request over the probe channel.
@@ -46,25 +53,11 @@ func isResolvConfEvent(event fsnotify.Event) bool {
 // start starts the Watch.
 func (w *Watch) start() {
 	defer close(w.closed)
-
-	// create watcher
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		log.WithError(err).Fatal("TND could not create file watcher")
-	}
 	defer func() {
-		if err := watcher.Close(); err != nil {
+		if err := w.watcher.Close(); err != nil {
 			log.WithError(err).Error("TND could not stop file watcher")
 		}
 	}()
-
-	// add resolv.conf folders to watcher
-	if err := watcher.Add(etc); err != nil {
-		log.WithError(err).Debug("TND could not add etc to file watcher")
-	}
-	if err := watcher.Add(systemdResolveDir); err != nil {
-		log.WithError(err).Debug("TND could not add systemd to file watcher")
-	}
 
 	// run initial probe
 	w.sendProbe()
@@ -72,7 +65,7 @@ func (w *Watch) start() {
 	// watch the files
 	for {
 		select {
-		case event, ok := <-watcher.Events:
+		case event, ok := <-w.watcher.Events:
 			if !ok {
 				return
 			}
@@ -83,7 +76,7 @@ func (w *Watch) start() {
 				}).Debug("TND got resolv.conf file event")
 				w.sendProbe()
 			}
-		case err, ok := <-watcher.Errors:
+		case err, ok := <-w.watcher.Errors:
 			if !ok {
 				return
 			}
@@ -94,9 +87,39 @@ func (w *Watch) start() {
 	}
 }
 
+// fsnotifyNewWatcher is fsnotify.NewWatcher for testing.
+var fsnotifyNewWatcher = fsnotify.NewWatcher
+
+// watcherAdd is watcher.Add for testing.
+var watcherAdd = func(watcher *fsnotify.Watcher, name string) error {
+	return watcher.Add(name)
+}
+
 // Start starts the Watch.
-func (w *Watch) Start() {
+func (w *Watch) Start() error {
+	// create watcher
+	watcher, err := fsnotifyNewWatcher()
+	if err != nil {
+		log.WithError(err).Error("TND could not create file watcher")
+		return err
+	}
+
+	// add resolv.conf folders to watcher
+	if err := watcherAdd(watcher, etc); err != nil {
+		log.WithError(err).Error("TND could not add etc to file watcher")
+		_ = watcher.Close()
+		return err
+	}
+	if err := watcherAdd(watcher, systemdResolveDir); err != nil {
+		log.WithError(err).Error("TND could not add systemd to file watcher")
+		_ = watcher.Close()
+		return err
+	}
+
+	// start watcher
+	w.watcher = watcher
 	go w.start()
+	return nil
 }
 
 // Stop stops the Watch.

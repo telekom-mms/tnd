@@ -7,9 +7,17 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+// Watcher is the watcher interface.
+type Watcher interface {
+	Start() error
+	Stop()
+	Probes() chan struct{}
+}
+
 // Watch waits for routing update events and then probes the
 // trusted https servers.
 type Watch struct {
+	events chan netlink.RouteUpdate
 	probes chan struct{}
 	done   chan struct{}
 }
@@ -24,17 +32,11 @@ func (w *Watch) sendProbe() {
 
 // start starts the Watch.
 func (w *Watch) start() {
-	// register for route update events
-	events := make(chan netlink.RouteUpdate)
-	if err := netlink.RouteSubscribe(events, w.done); err != nil {
-		log.WithError(err).Fatal("TND route subscribe error")
-	}
-
 	// run initial probe
 	w.sendProbe()
 
 	// handle route update events
-	for e := range events {
+	for e := range w.events {
 		switch e.Type {
 		case unix.RTM_NEWROUTE:
 			log.WithField("dst", e.Dst).Debug("TND got route NEW event")
@@ -45,9 +47,20 @@ func (w *Watch) start() {
 	}
 }
 
+// netlinkRouteSubscribe is netlink.RouteSubscribe for testing.
+var netlinkRouteSubscribe = netlink.RouteSubscribe
+
 // Start starts the Watch.
-func (w *Watch) Start() {
+func (w *Watch) Start() error {
+	// register for route update events
+	if err := netlinkRouteSubscribe(w.events, w.done); err != nil {
+		log.WithError(err).Error("TND route subscribe error")
+		return err
+	}
+
+	// start watcher
 	go w.start()
+	return nil
 }
 
 // Stop stops the Watch.
@@ -67,6 +80,7 @@ func (w *Watch) Probes() chan struct{} {
 // NewWatch returns a new Watch.
 func NewWatch(probes chan struct{}) *Watch {
 	return &Watch{
+		events: make(chan netlink.RouteUpdate),
 		probes: probes,
 		done:   make(chan struct{}),
 	}

@@ -32,17 +32,36 @@ type Detector struct {
 	runAgain bool
 }
 
-// AddServer adds the https server url and its expected hash to the list of
-// trusted servers; note: all servers must be added before Start().
-func (d *Detector) AddServer(url, hash string) {
-	server := https.NewServer(url, hash)
-	d.servers = append(d.servers, server)
+// SetServers sets the https server urls and their expected hashes in the
+// servers map as trusted servers; map key is the server url, value is the
+// server's hash. Note: servers must be set before Start().
+func (d *Detector) SetServers(servers map[string]string) {
+	d.servers = []*https.Server{}
+	for url, hash := range servers {
+		server := https.NewServer(url, hash)
+		d.servers = append(d.servers, server)
+	}
+}
+
+// GetServers returns the https servers as map; map key is the server url,
+// value is the server's hash.
+func (d *Detector) GetServers() map[string]string {
+	servers := make(map[string]string)
+	for _, s := range d.servers {
+		servers[s.URL] = s.Hash
+	}
+	return servers
 }
 
 // SetDialer sets a custom dialer for the https connections; note: the dialer
 // must be set before Start().
 func (d *Detector) SetDialer(dialer *net.Dialer) {
 	d.dialer = dialer
+}
+
+// GetDialer returns the custom dialer for the https connections.
+func (d *Detector) GetDialer() *net.Dialer {
+	return d.dialer
 }
 
 // sendResult sends result over channel c.

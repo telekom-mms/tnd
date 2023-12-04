@@ -2,45 +2,60 @@ package tndtest
 
 import (
 	"net"
+	"reflect"
 	"testing"
 )
 
-// TestDetectorAddServer tests AddServer of Detector.
-func TestDetectorAddServer(t *testing.T) {
+// TestDetectorSetGetServers tests SetServers and GetServers of Detector.
+func TestDetectorSetGetServers(t *testing.T) {
 	d := NewDetector()
 
 	// test no func set
 	url := "https://example.com"
 	hash := "abcdefabcdefabcdefabcdef"
-	d.AddServer(url, hash)
+	servers := map[string]string{url: hash}
+	d.SetServers(servers)
+	if d.GetServers() != nil {
+		t.Errorf("servers should be nil")
+	}
 
 	// test func set
-	gotURL := ""
-	gotHash := ""
-	d.Funcs.AddServer = func(url, hash string) {
-		gotURL = url
-		gotHash = hash
+	testServers := map[string]string{}
+	d.Funcs.SetServers = func(s map[string]string) {
+		testServers = s
 	}
-	d.AddServer(url, hash)
-	if gotURL != url || gotHash != hash {
-		t.Errorf("got %s %s, want %s %s", gotURL, gotHash, url, hash)
+	d.Funcs.GetServers = func() map[string]string {
+		return testServers
+	}
+	d.SetServers(servers)
+	got := d.GetServers()
+	if !reflect.DeepEqual(got, servers) {
+		t.Errorf("got %v, want %v", got, servers)
 	}
 }
 
-// TestDetectorSetDialer tests SetDialer of Detector.
-func TestDetectorSetDialer(t *testing.T) {
+// TestDetectorSetDialer tests SetDialer and GetDialer of Detector.
+func TestDetectorSetGetDialer(t *testing.T) {
 	d := NewDetector()
 
 	// test no func set
 	d.SetDialer(&net.Dialer{})
+	if d.GetDialer() != nil {
+		t.Errorf("dialer should be nil")
+	}
 
 	// test func set
 	want := &net.Dialer{}
-	got := &net.Dialer{}
+	testDialer := &net.Dialer{}
 	d.Funcs.SetDialer = func(dialer *net.Dialer) {
-		got = dialer
+		testDialer = dialer
 	}
+	d.Funcs.GetDialer = func() *net.Dialer {
+		return testDialer
+	}
+
 	d.SetDialer(want)
+	got := d.GetDialer()
 	if got != want {
 		t.Errorf("got %p, want %p", got, want)
 	}

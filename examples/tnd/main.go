@@ -47,9 +47,7 @@ func main() {
 	t := tnd.NewDetector(tnd.NewConfig())
 
 	// set trusted https servers
-	for url, hash := range httpsServers {
-		t.AddServer(url, hash)
-	}
+	t.SetServers(httpsServers)
 
 	// start tnd
 	t.Start()

@@ -4,39 +4,36 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"net"
+	"reflect"
 	"testing"
 )
 
-// TestTNDAddServer tests AddServer of TND.
-func TestTNDAddServer(t *testing.T) {
+// TestDetectorSetGetServers tests SetServers and GetServers of Detector.
+func TestDetectorSetGetServers(t *testing.T) {
 	tnd := NewDetector(NewConfig())
+
 	url := "http://test.example.com:442"
 	cert := []byte("raw test certificate")
 	hash := sha256.Sum256(cert)
 	hs := hex.EncodeToString(hash[:])
-	tnd.AddServer(url, hs)
+	want := map[string]string{url: hs}
 
-	want := url
-	got := tnd.servers[0].URL
-	if got != want {
-		t.Errorf("got %s, want %s", got, want)
-	}
+	tnd.SetServers(want)
+	got := tnd.GetServers()
 
-	want = hs
-	got = tnd.servers[0].Hash
-	if got != want {
-		t.Errorf("got %s, want %s", got, want)
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %v, want %v", got, want)
 	}
 }
 
-// TestTNDSetDialer tests SetDialer of TND.
-func TestTNDSetDialer(t *testing.T) {
+// TestDetectorSetGetDialer tests SetDialer and GetDialer of Detector.
+func TestDetectorSetGetDialer(t *testing.T) {
 	tnd := NewDetector(NewConfig())
 	dialer := &net.Dialer{}
 	tnd.SetDialer(dialer)
 
 	want := dialer
-	got := tnd.dialer
+	got := tnd.GetDialer()
 	if got != want {
 		t.Errorf("got %p, want %p", got, want)
 	}

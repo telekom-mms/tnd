@@ -24,9 +24,11 @@ func main() {
 	t := tnd.NewDetector(tnd.NewConfig())
 
 	// set trusted https server(s)
+	servers := make(map[string]string)
 	url := "https://trusted1.mynetwork.com:443"
 	hash := "ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789"
-	t.AddServer(url, hash)
+	servers[url] = hash
+	t.SetServers(servers)
 
 	// start tnd
 	t.Start()

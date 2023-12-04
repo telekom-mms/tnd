@@ -11,7 +11,7 @@ type Funcs struct {
 	GetServers func() map[string]string
 	SetDialer  func(dialer *net.Dialer)
 	GetDialer  func() *net.Dialer
-	Start      func()
+	Start      func() error
 	Stop       func()
 	Probe      func()
 	Results    func() chan bool
@@ -54,10 +54,11 @@ func (d *Detector) GetDialer() *net.Dialer {
 }
 
 // Start starts the trusted network detection.
-func (d *Detector) Start() {
+func (d *Detector) Start() error {
 	if d.Funcs.Start != nil {
-		d.Funcs.Start()
+		return d.Funcs.Start()
 	}
+	return nil
 }
 
 // Stop stops the running TND.

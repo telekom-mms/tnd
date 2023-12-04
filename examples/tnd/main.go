@@ -1,3 +1,4 @@
+// package main contains a TND example.
 package main
 
 import (

@@ -51,7 +51,9 @@ func main() {
 	t.SetServers(httpsServers)
 
 	// start tnd
-	t.Start()
+	if err := t.Start(); err != nil {
+		log.Fatal(err)
+	}
 	for r := range t.Results() {
 		log.WithField("trusted", r).Info("TND result")
 	}

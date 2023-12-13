@@ -3,10 +3,19 @@ package tnd
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"net"
 	"reflect"
 	"testing"
 )
+
+// testWatcher is a watcher that implements the routes.Watcher and
+// files.Watcher interfaces.
+type testWatcher struct{ err error }
+
+func (t *testWatcher) Start() error          { return t.err }
+func (t *testWatcher) Stop()                 {}
+func (t *testWatcher) Probes() chan struct{} { return nil }
 
 // TestDetectorSetGetServers tests SetServers and GetServers of Detector.
 func TestDetectorSetGetServers(t *testing.T) {
@@ -40,16 +49,50 @@ func TestDetectorSetGetDialer(t *testing.T) {
 }
 
 // TestTNDStartStop tests Start and Stop of TND.
-func TestTNDStartStop(_ *testing.T) {
-	tnd := NewDetector(NewConfig())
-	tnd.Start()
-	tnd.Stop()
+func TestTNDStartStop(t *testing.T) {
+	// test rw error
+	t.Run("routes watch error", func(t *testing.T) {
+		tnd := NewDetector(NewConfig())
+		tnd.rw = &testWatcher{err: errors.New("test error")}
+		tnd.fw = &testWatcher{}
+		if err := tnd.Start(); err == nil {
+			t.Error("start should fail")
+			return
+		}
+	})
+
+	// test fw error
+	t.Run("files watch error", func(t *testing.T) {
+		tnd := NewDetector(NewConfig())
+		tnd.rw = &testWatcher{}
+		tnd.fw = &testWatcher{err: errors.New("test error")}
+		if err := tnd.Start(); err == nil {
+			t.Error("start should fail")
+			return
+		}
+	})
+
+	// test without errors
+	t.Run("no errors", func(t *testing.T) {
+		tnd := NewDetector(NewConfig())
+		tnd.rw = &testWatcher{}
+		tnd.fw = &testWatcher{}
+		if err := tnd.Start(); err != nil {
+			t.Errorf("start should not fail: %v", err)
+			return
+		}
+		tnd.Stop()
+	})
 }
 
 // TestTNDProbe tests Probe of TND.
 func TestTNDProbe(t *testing.T) {
 	tnd := NewDetector(NewConfig())
-	tnd.Start()
+	tnd.rw = &testWatcher{}
+	tnd.fw = &testWatcher{}
+	if err := tnd.Start(); err != nil {
+		t.Fatal(err)
+	}
 	tnd.Probe()
 	want := false
 	got := <-tnd.Results()
@@ -71,17 +114,24 @@ func TestTNDResults(t *testing.T) {
 
 // TestNewTND tests NewTND.
 func TestNewTND(t *testing.T) {
-	tnd := NewDetector(NewConfig())
-	if tnd.probes == nil {
-		t.Errorf("got nil, want != nil")
+	c := NewConfig()
+	tnd := NewDetector(c)
+
+	if tnd.config != c {
+		t.Errorf("got %v, want %v", tnd.config, c)
 	}
-	if tnd.results == nil {
-		t.Errorf("got nil, want != nil")
-	}
-	if tnd.done == nil {
-		t.Errorf("got nil, want != nil")
-	}
-	if tnd.dialer == nil {
-		t.Errorf("got nil, want != nil")
+
+	for i, x := range []any{
+		tnd.probes,
+		tnd.results,
+		tnd.done,
+		tnd.dialer,
+		tnd.rw,
+		tnd.fw,
+		tnd.probeResults,
+	} {
+		if x == nil {
+			t.Errorf("got nil, want != nil: %d", i)
+		}
 	}
 }

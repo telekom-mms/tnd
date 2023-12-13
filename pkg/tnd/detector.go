@@ -19,6 +19,10 @@ type Detector struct {
 	servers []*https.Server
 	dialer  *net.Dialer
 
+	// route and file watch
+	rw routes.Watcher
+	fw files.Watcher
+
 	// timer
 	timer *time.Timer
 
@@ -106,16 +110,8 @@ func (d *Detector) resetTimer() {
 func (d *Detector) start() {
 	// signal stop to user via results
 	defer close(d.results)
-
-	// start route watching
-	rw := routes.NewWatch(d.probes)
-	rw.Start()
-	defer rw.Stop()
-
-	// start file watching
-	fw := files.NewWatch(d.probes)
-	fw.Start()
-	defer fw.Stop()
+	defer d.rw.Stop()
+	defer d.fw.Stop()
 
 	// set timer for periodic checks
 	d.timer = time.NewTimer(d.config.UntrustedTimer)
@@ -177,8 +173,21 @@ func (d *Detector) start() {
 }
 
 // Start starts the trusted network detection.
-func (d *Detector) Start() {
+func (d *Detector) Start() error {
+	// start route watching
+	if err := d.rw.Start(); err != nil {
+		return err
+	}
+
+	// start file watching
+	if err := d.fw.Start(); err != nil {
+		d.rw.Stop()
+		return err
+	}
+
+	// start detector
 	go d.start()
+	return nil
 }
 
 // Stop stops the running TND.
@@ -205,12 +214,15 @@ func (d *Detector) Results() chan bool {
 
 // NewDetector returns a new Detector.
 func NewDetector(config *Config) *Detector {
+	probes := make(chan struct{})
 	return &Detector{
 		config:  config,
-		probes:  make(chan struct{}),
+		probes:  probes,
 		results: make(chan bool),
 		done:    make(chan struct{}),
 		dialer:  &net.Dialer{},
+		rw:      routes.NewWatch(probes),
+		fw:      files.NewWatch(probes),
 
 		probeResults: make(chan bool),
 	}

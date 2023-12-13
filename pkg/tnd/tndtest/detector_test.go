@@ -71,8 +71,9 @@ func TestDetectorStart(t *testing.T) {
 	// test func set
 	want := true
 	got := false
-	d.Funcs.Start = func() {
+	d.Funcs.Start = func() error {
 		got = true
+		return nil
 	}
 	d.Start()
 	if got != want {

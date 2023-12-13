@@ -31,7 +31,9 @@ func main() {
 	t.SetServers(servers)
 
 	// start tnd
-	t.Start()
+	if err := t.Start(); err != nil {
+		log.Fatal(err)
+	}
 	for r := range t.Results() {
 		log.Println("Trusted Network:", r)
 	}

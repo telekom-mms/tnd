@@ -11,7 +11,7 @@ type TND interface {
 	GetServers() map[string]string
 	SetDialer(dialer *net.Dialer)
 	GetDialer() *net.Dialer
-	Start()
+	Start() error
 	Stop()
 	Probe()
 	Results() chan bool

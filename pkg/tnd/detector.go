@@ -106,6 +106,57 @@ func (d *Detector) resetTimer() {
 	}
 }
 
+// handleProbeRequest handles a probe request.
+func (d *Detector) handleProbeRequest() {
+	if d.running {
+		d.runAgain = true
+		return
+	}
+	d.running = true
+	go d.probe()
+
+}
+
+// handleProbeResult handles the probe result r.
+func (d *Detector) handleProbeResult(r bool) {
+	// handle probe result
+	d.running = false
+	if d.runAgain {
+		// we must trigger another probe
+		d.runAgain = false
+		d.running = true
+		go d.probe()
+	}
+	log.WithField("trusted", r).Debug("TND https result")
+	d.trusted = r
+	d.sendResult(d.results, r)
+
+	// reset periodic probing timer
+	if d.running {
+		// probing still active and new results about
+		// to arrive, so wait for them before resetting
+		// the timer
+		return
+	}
+	if !d.timer.Stop() {
+		<-d.timer.C
+	}
+	d.resetTimer()
+}
+
+// handleTimer handles a timer event.
+func (d *Detector) handleTimer() {
+	if !d.running && !d.runAgain {
+		// no probes active, trigger new probe
+		log.Debug("TND periodic probe timer")
+		d.running = true
+		go d.probe()
+	}
+
+	// reset timer
+	d.resetTimer()
+}
+
 // start starts the trusted network detection.
 func (d *Detector) start() {
 	// signal stop to user via results
@@ -120,48 +171,13 @@ func (d *Detector) start() {
 	for {
 		select {
 		case <-d.probes:
-			if d.running {
-				d.runAgain = true
-				break
-			}
-			d.running = true
-			go d.probe()
+			d.handleProbeRequest()
 
 		case r := <-d.probeResults:
-			// handle probe result
-			d.running = false
-			if d.runAgain {
-				// we must trigger another probe
-				d.runAgain = false
-				d.running = true
-				go d.probe()
-			}
-			log.WithField("trusted", r).Debug("TND https result")
-			d.trusted = r
-			d.sendResult(d.results, r)
-
-			// reset periodic probing timer
-			if d.running {
-				// probing still active and new results about
-				// to arrive, so wait for them before resetting
-				// the timer
-				break
-			}
-			if !d.timer.Stop() {
-				<-d.timer.C
-			}
-			d.resetTimer()
+			d.handleProbeResult(r)
 
 		case <-d.timer.C:
-			if !d.running && !d.runAgain {
-				// no probes active, trigger new probe
-				log.Debug("TND periodic probe timer")
-				d.running = true
-				go d.probe()
-			}
-
-			// reset timer
-			d.resetTimer()
+			d.handleTimer()
 
 		case <-d.done:
 			if !d.timer.Stop() {

@@ -7,6 +7,59 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
+// TestIsResolvConfEvent tests isResolvConfEvent.
+func TestIsResolvConfEvent(t *testing.T) {
+	// other events
+	for _, invalid := range []fsnotify.Event{
+		{},
+		{Name: "something else"},
+	} {
+		if ok := isResolvConfEvent(invalid); ok {
+			t.Errorf("event should not be a resolv.conf event: %v", invalid)
+		}
+	}
+
+	// resolv.conf events
+	for _, valid := range []fsnotify.Event{
+		{Name: etcResolvConf},
+		{Name: stubResolvConf},
+		{Name: systemdResolvConf},
+	} {
+		if ok := isResolvConfEvent(valid); !ok {
+			t.Errorf("event should be a resolv.conf event: %v", valid)
+		}
+	}
+}
+
+// TestWatchStartEvents tests start of Watch, events.
+func TestWatchStartEvents(t *testing.T) {
+	// create watcher
+	probes := make(chan struct{})
+	fw := NewWatch(probes)
+	w, err := fsnotify.NewWatcher()
+	if err != nil {
+		t.Fatal(err)
+	}
+	fw.watcher = w
+
+	// start watcher and get initial probe
+	go fw.start()
+	<-probes
+
+	// send watcher events, handle probes
+	fw.watcher.Errors <- errors.New("test error")
+	fw.watcher.Events <- fsnotify.Event{Name: etcResolvConf}
+	<-probes
+
+	// unexpected close of watcher channels
+	if err := fw.watcher.Close(); err != nil {
+		t.Errorf("error closing watcher: %v", err)
+	}
+
+	// wait for watcher
+	<-fw.closed
+}
+
 // TestWatchStartStop tests Start() and Stop() of Watch.
 func TestWatchStartStop(t *testing.T) {
 	probes := make(chan struct{})

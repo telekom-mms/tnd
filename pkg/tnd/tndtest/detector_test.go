@@ -66,7 +66,9 @@ func TestDetectorStart(t *testing.T) {
 	d := NewDetector()
 
 	// test no func set
-	d.Start()
+	if err := d.Start(); err != nil {
+		t.Fatal(err)
+	}
 
 	// test func set
 	want := true
@@ -75,7 +77,9 @@ func TestDetectorStart(t *testing.T) {
 		got = true
 		return nil
 	}
-	d.Start()
+	if err := d.Start(); err != nil {
+		t.Fatal(err)
+	}
 	if got != want {
 		t.Errorf("got %t, want %t", got, want)
 	}

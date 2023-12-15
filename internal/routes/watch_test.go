@@ -5,7 +5,27 @@ import (
 	"testing"
 
 	"github.com/vishvananda/netlink"
+	"golang.org/x/sys/unix"
 )
+
+// TestWatchStartEvents tests start of Watch, events.
+func TestWatchStartEvents(_ *testing.T) {
+	// create and start watch
+	probes := make(chan struct{})
+	rw := NewWatch(probes)
+	go rw.start()
+	<-probes
+
+	// new route event
+	rw.events <- netlink.RouteUpdate{Type: unix.RTM_NEWROUTE}
+	<-probes
+
+	// delete route event
+	rw.events <- netlink.RouteUpdate{Type: unix.RTM_DELROUTE}
+	<-probes
+
+	close(rw.done)
+}
 
 // TestWatchStartStop tests Start and Stop of Watch.
 func TestWatchStartStop(t *testing.T) {

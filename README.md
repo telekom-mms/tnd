@@ -17,7 +17,11 @@ You can use the Trusted Network Detection as shown in the following example:
 ```golang
 package main
 
-import "github.com/telekom-mms/tnd/pkg/tnd"
+import (
+	"log"
+
+	"github.com/telekom-mms/tnd/pkg/tnd"
+)
 
 func main() {
 	// create tnd

@@ -14,7 +14,7 @@ import (
 func TestServerCheck(t *testing.T) {
 	// start test https server
 	ts := httptest.NewTLSServer(http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {}))
+		func(http.ResponseWriter, *http.Request) {}))
 	defer ts.Close()
 
 	// test invalid server

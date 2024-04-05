@@ -10,6 +10,8 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // testWatcher is a watcher that implements the routes.Watcher and
@@ -55,7 +57,7 @@ func TestDetectorSetGetDialer(t *testing.T) {
 func TestDetectorProbe(t *testing.T) {
 	// start test https server
 	ts := httptest.NewTLSServer(http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {}))
+		func(http.ResponseWriter, *http.Request) {}))
 	defer ts.Close()
 
 	// create detector
@@ -117,7 +119,8 @@ func TestDetectorHandleProbeResult(t *testing.T) {
 
 	// drain results channel
 	go func() {
-		for range tnd.results {
+		for r := range tnd.results {
+			log.Println("result:", r)
 		}
 	}()
 

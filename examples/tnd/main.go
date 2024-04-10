@@ -1,4 +1,6 @@
-// package main contains a TND example.
+/*
+Tnd is a TND example.
+*/
 package main
 
 import (

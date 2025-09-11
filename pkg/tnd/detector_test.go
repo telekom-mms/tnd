@@ -53,8 +53,8 @@ func TestDetectorSetGetDialer(t *testing.T) {
 	}
 }
 
-// TestDetectorProbe tests probe of Detector.
-func TestDetectorProbe(t *testing.T) {
+// TestDetectorProbeHelper tests probe of Detector.
+func TestDetectorProbeHelper(t *testing.T) {
 	// start test https server
 	ts := httptest.NewTLSServer(http.HandlerFunc(
 		func(http.ResponseWriter, *http.Request) {}))
@@ -170,8 +170,8 @@ func TestDetectorHandleTimer(t *testing.T) {
 	}
 }
 
-// TestTNDStartStop tests Start and Stop of TND.
-func TestTNDStartStop(t *testing.T) {
+// TestDetectorStartStop tests Start and Stop of Detector.
+func TestDetectorStartStop(t *testing.T) {
 	// test rw error
 	t.Run("routes watch error", func(t *testing.T) {
 		tnd := NewDetector(NewConfig())
@@ -207,8 +207,8 @@ func TestTNDStartStop(t *testing.T) {
 	})
 }
 
-// TestTNDProbe tests Probe of TND.
-func TestTNDProbe(t *testing.T) {
+// TestDetectorProbe tests Probe of Detector.
+func TestDetectorProbe(t *testing.T) {
 	tnd := NewDetector(NewConfig())
 	tnd.rw = &testWatcher{}
 	tnd.fw = &testWatcher{}
@@ -224,8 +224,8 @@ func TestTNDProbe(t *testing.T) {
 	tnd.Stop()
 }
 
-// TestTNDResults tests Results of TND.
-func TestTNDResults(t *testing.T) {
+// TestDetectorResults tests Results of Detector.
+func TestDetectorResults(t *testing.T) {
 	tnd := NewDetector(NewConfig())
 	want := tnd.results
 	got := tnd.Results()
@@ -234,8 +234,8 @@ func TestTNDResults(t *testing.T) {
 	}
 }
 
-// TestNewTND tests NewTND.
-func TestNewTND(t *testing.T) {
+// TestNewDetector tests NewDetector.
+func TestNewDetector(t *testing.T) {
 	c := NewConfig()
 	tnd := NewDetector(c)
 

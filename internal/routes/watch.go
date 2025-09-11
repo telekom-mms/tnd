@@ -11,7 +11,6 @@ import (
 type Watcher interface {
 	Start() error
 	Stop()
-	Probes() chan struct{}
 }
 
 // Watch waits for routing update events and then probes the
@@ -70,11 +69,6 @@ func (w *Watch) Stop() {
 	// library we use. So, we cannot really wait for the goroutine
 	// termination here
 	close(w.done)
-}
-
-// Probes returns the probe channel.
-func (w *Watch) Probes() chan struct{} {
-	return w.probes
 }
 
 // NewWatch returns a new Watch.

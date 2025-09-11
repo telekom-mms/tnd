@@ -239,7 +239,7 @@ func NewDetector(config *Config) *Detector {
 		done:    make(chan struct{}),
 		dialer:  &net.Dialer{},
 		rw:      routes.NewWatch(probes),
-		fw:      files.NewWatch(probes),
+		fw:      files.NewWatch(probes, config.WatchFiles),
 
 		probeResults: make(chan bool),
 	}

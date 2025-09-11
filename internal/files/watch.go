@@ -2,17 +2,11 @@
 package files
 
 import (
+	"path/filepath"
+	"slices"
+
 	"github.com/fsnotify/fsnotify"
 	log "github.com/sirupsen/logrus"
-)
-
-var (
-	// resolv.conf files in /etc and /run/systemd/resolve.
-	etc               = "/etc"
-	etcResolvConf     = etc + "/resolv.conf"
-	systemdResolveDir = "/run/systemd/resolve"
-	systemdResolvConf = systemdResolveDir + "/resolv.conf"
-	stubResolvConf    = systemdResolveDir + "/stub-resolv.conf"
 )
 
 // Watcher is the file watcher interface.
@@ -23,6 +17,7 @@ type Watcher interface {
 
 // Watch watches resolv.conf files and then probes the trusted https servers.
 type Watch struct {
+	files   []string
 	watcher *fsnotify.Watcher
 	probes  chan struct{}
 	done    chan struct{}
@@ -35,19 +30,6 @@ func (w *Watch) sendProbe() {
 	case w.probes <- struct{}{}:
 	case <-w.done:
 	}
-}
-
-// isResolvConfEvent checks if event is a resolv.conf file event.
-func isResolvConfEvent(event fsnotify.Event) bool {
-	switch event.Name {
-	case etcResolvConf:
-		return true
-	case stubResolvConf:
-		return true
-	case systemdResolvConf:
-		return true
-	}
-	return false
 }
 
 // start starts the Watch.
@@ -69,7 +51,7 @@ func (w *Watch) start() {
 			if !ok {
 				return
 			}
-			if isResolvConfEvent(event) {
+			if slices.Contains(w.files, event.Name) {
 				log.WithFields(log.Fields{
 					"name": event.Name,
 					"op":   event.Op,
@@ -105,15 +87,16 @@ func (w *Watch) Start() error {
 	}
 
 	// add resolv.conf folders to watcher
-	if err := watcherAdd(watcher, etc); err != nil {
-		log.WithError(err).Error("TND could not add etc to file watcher")
-		_ = watcher.Close()
-		return err
-	}
-	if err := watcherAdd(watcher, systemdResolveDir); err != nil {
-		log.WithError(err).Error("TND could not add systemd to file watcher")
-		_ = watcher.Close()
-		return err
+	for _, f := range w.files {
+		p := filepath.Dir(f)
+		if err := watcherAdd(watcher, p); err != nil {
+			log.WithError(err).
+				WithField("file", f).
+				WithField("folder", p).
+				Error("TND could not add folder to file watcher")
+			_ = watcher.Close()
+			return err
+		}
 	}
 
 	// start watcher
@@ -129,8 +112,9 @@ func (w *Watch) Stop() {
 }
 
 // NewWatch returns a new Watch.
-func NewWatch(probes chan struct{}) *Watch {
+func NewWatch(probes chan struct{}, files []string) *Watch {
 	return &Watch{
+		files:  files,
 		probes: probes,
 		done:   make(chan struct{}),
 		closed: make(chan struct{}),

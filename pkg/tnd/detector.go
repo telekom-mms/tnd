@@ -1,6 +1,7 @@
 package tnd
 
 import (
+	"math/rand/v2"
 	"net"
 	"time"
 
@@ -78,7 +79,8 @@ func (d *Detector) sendResult(c chan bool, result bool) {
 
 // probe checks the servers and sends the result back over probeResults.
 func (d *Detector) probe() {
-	for _, s := range d.servers {
+	for _, i := range rand.Perm(len(d.servers)) {
+		s := d.servers[i]
 		// sleep between server probes to let network settle a bit in
 		// case of a burst of routing and dns changes, e.g, when
 		// connecting to a new network
@@ -87,7 +89,6 @@ func (d *Detector) probe() {
 		if s.Check(d.dialer, d.config.HTTPSTimeout) {
 			// TODO: be more strict and require all trusted servers
 			// to be reachable?
-			// TODO: probe servers in random order?
 			log.WithField("url", s.URL).Debug("TND https server trusted")
 			d.sendResult(d.probeResults, true)
 			return

@@ -3,6 +3,14 @@ package tnd
 import "time"
 
 var (
+	// WatchFiles are the default files to watch for changes. They are
+	// resolv.conf files in /etc and /run/systemd/resolve.
+	WatchFiles = []string{
+		"/etc/resolv.conf",
+		"/run/systemd/resolve/resolv.conf",
+		"/run/systemd/resolve/stub-resolv.conf",
+	}
+
 	// WaitCheck is the default wait time before http checks.
 	WaitCheck = 1 * time.Second
 
@@ -20,6 +28,10 @@ var (
 
 // Config is a TND configuration.
 type Config struct {
+	// WatchFiles are the files to watch for changes. By default, they are
+	// resolv.conf files in /etc and /run/systemd/resolve.
+	WatchFiles []string
+
 	// WaitCheck is the wait time before http checks.
 	WaitCheck time.Duration
 
@@ -35,9 +47,18 @@ type Config struct {
 	TrustedTimer time.Duration
 }
 
+// Copy returns a copy of Config.
+func (c *Config) Copy() *Config {
+	tnd := *c
+	tnd.WatchFiles = append(c.WatchFiles[:0:0], c.WatchFiles...)
+
+	return &tnd
+}
+
 // Valid returns whether Config is valid.
 func (c *Config) Valid() bool {
 	if c == nil ||
+		len(c.WatchFiles) == 0 ||
 		c.WaitCheck < 0 ||
 		c.HTTPSTimeout < 0 ||
 		c.UntrustedTimer < 0 ||
@@ -51,6 +72,7 @@ func (c *Config) Valid() bool {
 // NewConfig returns a new Config.
 func NewConfig() *Config {
 	return &Config{
+		WatchFiles:     append(WatchFiles[:0:0], WatchFiles...),
 		WaitCheck:      WaitCheck,
 		HTTPSTimeout:   HTTPSTimeout,
 		UntrustedTimer: UntrustedTimer,

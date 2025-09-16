@@ -2,40 +2,25 @@ package files
 
 import (
 	"errors"
+	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/fsnotify/fsnotify"
 )
 
-// TestIsResolvConfEvent tests isResolvConfEvent.
-func TestIsResolvConfEvent(t *testing.T) {
-	// other events
-	for _, invalid := range []fsnotify.Event{
-		{},
-		{Name: "something else"},
-	} {
-		if ok := isResolvConfEvent(invalid); ok {
-			t.Errorf("event should not be a resolv.conf event: %v", invalid)
-		}
-	}
-
-	// resolv.conf events
-	for _, valid := range []fsnotify.Event{
-		{Name: etcResolvConf},
-		{Name: stubResolvConf},
-		{Name: systemdResolvConf},
-	} {
-		if ok := isResolvConfEvent(valid); !ok {
-			t.Errorf("event should be a resolv.conf event: %v", valid)
-		}
-	}
+// testFiles are resolv.conf files for testing.
+var testFiles = []string{
+	"/etc/resolv.conf",
+	"/run/systemd/resolve/resolv.conf",
+	"/run/systemd/resolve/stub-resolv.conf",
 }
 
 // TestWatchStartEvents tests start of Watch, events.
 func TestWatchStartEvents(t *testing.T) {
 	// create watcher
 	probes := make(chan struct{})
-	fw := NewWatch(probes)
+	fw := NewWatch(probes, testFiles)
 	w, err := fsnotify.NewWatcher()
 	if err != nil {
 		t.Fatal(err)
@@ -48,7 +33,7 @@ func TestWatchStartEvents(t *testing.T) {
 
 	// send watcher events, handle probes
 	fw.watcher.Errors <- errors.New("test error")
-	fw.watcher.Events <- fsnotify.Event{Name: etcResolvConf}
+	fw.watcher.Events <- fsnotify.Event{Name: "/etc/resolv.conf"}
 	<-probes
 
 	// unexpected close of watcher channels
@@ -73,7 +58,7 @@ func TestWatchStartStop(t *testing.T) {
 		}
 
 		// test error
-		fw := NewWatch(probes)
+		fw := NewWatch(probes, testFiles)
 		if err := fw.Start(); err == nil {
 			t.Errorf("start should fail")
 		}
@@ -85,43 +70,26 @@ func TestWatchStartStop(t *testing.T) {
 		oldAdd := watcherAdd
 		defer func() { watcherAdd = oldAdd }()
 
-		// test dirs
-		for _, dir := range []string{
-			etc,
-			systemdResolveDir,
-		} {
-			// fail when adding dir
-			watcherAdd = func(_ *fsnotify.Watcher, name string) error {
-				if name == dir {
-					return errors.New("test error")
-				}
-				return nil
-			}
+		// fail when adding dir
+		watcherAdd = func(_ *fsnotify.Watcher, name string) error {
+			return errors.New("test error")
+		}
 
-			// test error
-			fw := NewWatch(probes)
-			if err := fw.Start(); err == nil {
-				t.Errorf("start should fail")
-			}
+		// test error
+		fw := NewWatch(probes, testFiles)
+		if err := fw.Start(); err == nil {
+			t.Errorf("start should fail")
 		}
 	})
 
 	// no errors
 	t.Run("no errors", func(t *testing.T) {
-		// cleanups after test
-		oldEtc := etc
-		oldResolve := systemdResolveDir
-		defer func() {
-			etc = oldEtc
-			systemdResolveDir = oldResolve
-		}()
-
-		// create test dirs
-		etc = t.TempDir()
-		systemdResolveDir = t.TempDir()
+		// create test dir
+		dir := t.TempDir()
+		file := filepath.Join(dir, "resolv.conf")
 
 		// test without errors
-		fw := NewWatch(probes)
+		fw := NewWatch(probes, []string{file})
 		if err := fw.Start(); err != nil {
 			t.Errorf("start should not fail: %v", err)
 		}
@@ -132,7 +100,10 @@ func TestWatchStartStop(t *testing.T) {
 // TestNewWatch tests NewWatch.
 func TestNewWatch(t *testing.T) {
 	probes := make(chan struct{})
-	fw := NewWatch(probes)
+	fw := NewWatch(probes, testFiles)
+	if !reflect.DeepEqual(fw.files, testFiles) {
+		t.Errorf("got %v, want %v", fw.files, testFiles)
+	}
 	if fw.probes != probes {
 		t.Errorf("got %p, want %p", fw.probes, probes)
 	}

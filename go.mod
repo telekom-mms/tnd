@@ -1,6 +1,6 @@
 module github.com/telekom-mms/tnd
 
-go 1.24.0
+go 1.25.1
 
 require (
 	github.com/fsnotify/fsnotify v1.8.0

@@ -52,15 +52,6 @@ func TestWatchStartStop(t *testing.T) {
 	})
 }
 
-// TestWatchProbes tests Probes of Watch.
-func TestWatchProbes(t *testing.T) {
-	probes := make(chan struct{})
-	rw := NewWatch(probes)
-	if rw.Probes() != probes {
-		t.Errorf("got %p, want %p", rw.Probes(), probes)
-	}
-}
-
 // TestNewWatch tests NewWatch.
 func TestNewWatch(t *testing.T) {
 	probes := make(chan struct{})

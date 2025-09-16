@@ -3,27 +3,36 @@ package tnd
 import "time"
 
 var (
-	// WaitCheck is the wait time before http checks.
+	// WaitCheck is the default wait time before http checks.
 	WaitCheck = 1 * time.Second
 
-	// HTTPSTimeout is the timeout for http requests.
+	// HTTPSTimeout is the default timeout for http requests.
 	HTTPSTimeout = 5 * time.Second
 
-	// UntrustedTimer is the timer for periodic checks in case of an
-	// untrusted network.
+	// UntrustedTimer is the default timer for periodic checks in case of
+	// an untrusted network.
 	UntrustedTimer = 30 * time.Second
 
-	// TrustedTimer is the timer for periodic checks in case of a
+	// TrustedTimer is the default timer for periodic checks in case of a
 	// trusted network.
 	TrustedTimer = 60 * time.Second
 )
 
 // Config is a TND configuration.
 type Config struct {
-	WaitCheck      time.Duration
-	HTTPSTimeout   time.Duration
+	// WaitCheck is the wait time before http checks.
+	WaitCheck time.Duration
+
+	// HTTPSTimeout is the timeout for http requests.
+	HTTPSTimeout time.Duration
+
+	// UntrustedTimer is the timer for periodic checks in case of an
+	// untrusted network.
 	UntrustedTimer time.Duration
-	TrustedTimer   time.Duration
+
+	// TrustedTimer is the timer for periodic checks in case of a
+	// trusted network.
+	TrustedTimer time.Duration
 }
 
 // Valid returns whether Config is valid.

@@ -60,7 +60,7 @@ func TestWatchStartEvents(t *testing.T) {
 	<-fw.closed
 }
 
-// TestWatchStartStop tests Start() and Stop() of Watch.
+// TestWatchStartStop tests Start and Stop of Watch.
 func TestWatchStartStop(t *testing.T) {
 	probes := make(chan struct{})
 
